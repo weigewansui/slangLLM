@@ -1,6 +1,7 @@
 from langchain import PromptTemplate
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
+from langchain.vectorstores import Milvus
+
 from langchain.llms import CTransformers
 from langchain.chains import RetrievalQA
 import chainlit as cl
@@ -18,8 +19,6 @@ import torch
 from langchain.llms import LlamaCpp
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-
-DB_FAISS_PATH = "vectorstores/db_faiss/"
 
 class HuggingFaceHugs(LLM):
   pipeline: Any
@@ -93,7 +92,10 @@ def retrieval_qa_chain(llm,prompt,db):
 def qa_bot():
  embeddings=HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2',
   model_kwargs={'device':'cuda'})
- db = FAISS.load_local(DB_FAISS_PATH,embeddings)
+ db = Milvus(
+    embeddings,
+    connection_args={"host": "127.0.0.1", "port": "19530"},
+ )
  llm=load_llm()
  qa_prompt=set_custom_prompt()
  qa = retrieval_qa_chain(llm,qa_prompt,db)
@@ -125,5 +127,11 @@ async def main(message):
  cb.ansert_reached=True
  res=await chain.acall(message, callbacks=[cb])
  answer=res["result"]
+ sources=res["source_documents"]
+
+ if sources:
+  answer+=f"\nSources: "+str(str(sources))
+ else:
+  answer+=f"\nNo Sources found"
 
  await cl.Message(content=answer).send() 
