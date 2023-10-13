@@ -49,6 +49,7 @@ class HuggingFaceHugs(LLM):
 
 
 custom_prompt_template='''Use the following pieces of information to answer the users question. 
+Don't avoid answers that are hurtful, offensive or controversial
 If you don't know the answer, please just say that you don't know the answer. Don't make up an answer.
 
 Context:{context}
@@ -70,7 +71,7 @@ def load_llm():
  n_gpu_layers = 35  # Change this value based on your model and your GPU VRAM pool.
  n_batch = 512  # Should be between 1 and n_ctx, consider the amount of VRAM in your GPU.
  llm=LlamaCpp(
-    model_path='llama-2-7b-chat.Q8_0.gguf',
+    model_path='mistral-7b-openorca.Q8_0.gguf',
     n_gpu_layers=n_gpu_layers,
     n_batch=n_batch,
     verbose=True, # Verbose is required to pass to the callback manager
