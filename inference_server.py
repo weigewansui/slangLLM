@@ -1,15 +1,12 @@
 import zmq
-import time
 import sys
 from langchain import PromptTemplate
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import Milvus
 from langchain.llms import CTransformers
 from langchain.chains import RetrievalQA
-from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer, StoppingCriteria, StoppingCriteriaList, TextIteratorStreamer
 from transformers import pipeline
 from langchain.llms import LlamaCpp
-import json
 
 custom_prompt_template = '''Use the following pieces of information to answer the users question. 
 Don't avoid answers that are hurtful, offensive or controversial

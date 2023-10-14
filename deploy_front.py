@@ -24,13 +24,14 @@ import zmq
 import json
 
 context = zmq.Context()
-socket = None
-socket = context.socket(zmq.REQ)
 
 
 ## chainlit here
 @cl.on_chat_start
 async def start():
+    socket = context.socket(zmq.REQ)
+    socket.connect("tcp://127.0.0.1:5556")
+    cl.user_session.set("socket", socket)
     msg = cl.Message(content="Firing up SlangLLM...")
     await msg.send()
     msg.content = "Hi, welcome to SlangLLM. What is your query?"
@@ -38,6 +39,7 @@ async def start():
 
 
 async def wait_for_msg(socket, message):
+    #  Socket to talk to server
     socket.send_string(message)
     res_str = socket.recv_string()
     res = json.loads(res_str)
@@ -46,16 +48,20 @@ async def wait_for_msg(socket, message):
 
 @cl.on_message
 async def main(message):
-    #  Socket to talk to server
-    socket.connect("tcp://127.0.0.1:5556")
-
+    socket = cl.user_session.get("socket")
     res = await wait_for_msg(socket, message)
     answer = res["result"]
-    sources = res["source_documents"]
+    # sources = res["source_documents"]
 
-    if sources:
-        answer += f"\nSources: " + str(str(sources))
-    else:
-        answer += f"\nNo Sources found"
+    # if sources:
+    #     answer += f"\nSources: " + str(str(sources))
+    # else:
+    #     answer += f"\nNo Sources found"
 
     await cl.Message(content=answer).send()
+
+
+@cl.on_chat_end
+def end():
+    socket = cl.user_session.get("socket")
+    socket.disconnect("tcp://127.0.0.1:5556")
