@@ -1,27 +1,7 @@
-from langchain import PromptTemplate
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import Milvus
-
-from langchain.llms import CTransformers
-from langchain.chains import RetrievalQA
 import chainlit as cl
-from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizer, StoppingCriteria, StoppingCriteriaList, TextIteratorStreamer
-from transformers import pipeline
-from langchain.llms.base import LLM
-from huggingface_hub import login
-from typing import Any, Dict, List, Mapping, Optional
-from pydantic import Extra, root_validator
-from langchain.callbacks.manager import CallbackManagerForLLMRun
-from langchain.llms.base import LLM
-from langchain.llms.utils import enforce_stop_tokens
-import torch
-
-from langchain.llms import LlamaCpp
-from langchain.callbacks.manager import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-
 import zmq
 import json
+import asyncio
 
 context = zmq.Context()
 
@@ -41,7 +21,8 @@ async def start():
 async def wait_for_msg(socket, message):
     #  Socket to talk to server
     socket.send_string(message)
-    res_str = socket.recv_string()
+    loop = asyncio.get_running_loop()
+    res_str = await loop.run_in_executor(None, socket.recv_string)
     res = json.loads(res_str)
     return res
 
